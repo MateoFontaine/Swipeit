@@ -1,4 +1,4 @@
-import { POLL_STATUS_LABELS } from "@/lib/polls/utils";
+import { POLL_STATUS_LABELS } from "@/lib/polls/constants";
 import type { PollStatus } from "@/types";
 import { cn } from "@/lib/utils";
 

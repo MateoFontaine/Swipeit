@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatPollDate } from "@/lib/polls/utils";
+import { formatPollDate } from "@/lib/polls/constants";
 import type { Poll } from "@/types";
 import { PollStatusBadge } from "./poll-status-badge";
 

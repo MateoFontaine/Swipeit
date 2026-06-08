@@ -231,6 +231,15 @@ export type Database = {
         Args: Record<string, never>;
         Returns: string;
       };
+      check_and_close_poll: {
+        Args: { p_poll_id: string };
+        Returns: {
+          closed: boolean;
+          status?: PollStatus;
+          reason?: string;
+          error?: string;
+        };
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -4,12 +4,9 @@ import { HostShell } from "@/components/host/host-shell";
 import { CopyLinkButton } from "@/components/polls/copy-link-button";
 import { PollStatusBadge } from "@/components/polls/poll-status-badge";
 import { StartPollButton } from "@/components/polls/start-poll-button";
-import { getHostPoll } from "@/lib/polls/actions";
-import {
-  formatPollDate,
-  getPollSharePath,
-  getPollShareUrl,
-} from "@/lib/polls/utils";
+import { getHostPoll } from "@/lib/polls/queries";
+import { formatPollDate } from "@/lib/polls/constants";
+import { getPollSharePath, getPollShareUrl } from "@/lib/polls/utils";
 import { createClient } from "@/lib/supabase/server";
 import type { PollOption } from "@/types/database";
 

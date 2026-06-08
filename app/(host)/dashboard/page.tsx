@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { HostShell } from "@/components/host/host-shell";
+
+export const dynamic = "force-dynamic";
 import { PollCard } from "@/components/polls/poll-card";
 import { Button } from "@/components/ui/button";
-import { getHostPolls } from "@/lib/polls/actions";
+import { getHostPolls } from "@/lib/polls/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/database";
 

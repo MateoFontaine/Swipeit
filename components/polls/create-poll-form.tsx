@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createPoll } from "@/lib/polls/actions";
+import type { CreatePollResult } from "@/lib/polls/mutations";
 import type { FieldErrors } from "@/lib/polls/validation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,23 +44,36 @@ export function CreatePollForm() {
     setError("");
     setFieldErrors({});
 
-    const result = await createPoll({
-      title,
-      description: description || undefined,
-      maxParticipants: parseInt(maxParticipants, 10),
-      timeLimitMinutes: timeLimitMinutes ? parseInt(timeLimitMinutes, 10) : null,
-      options,
-    });
+    try {
+      const response = await fetch("/api/polls", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description: description || undefined,
+          maxParticipants: parseInt(maxParticipants, 10),
+          timeLimitMinutes: timeLimitMinutes
+            ? parseInt(timeLimitMinutes, 10)
+            : null,
+          options,
+        }),
+      });
 
-    if (!result.success) {
-      setError(result.error);
-      setFieldErrors(result.fieldErrors ?? {});
+      const result = (await response.json()) as CreatePollResult;
+
+      if (!result.success) {
+        setError(result.error);
+        setFieldErrors(result.fieldErrors ?? {});
+        setLoading(false);
+        return;
+      }
+
+      router.push(`/dashboard/${result.pollId}`);
+      router.refresh();
+    } catch {
+      setError("No pudimos conectar con el servidor. Intentá de nuevo.");
       setLoading(false);
-      return;
     }
-
-    router.push(`/dashboard/${result.pollId}`);
-    router.refresh();
   }
 
   return (
@@ -110,7 +123,7 @@ export function CreatePollForm() {
           <Label htmlFor="max-participants">Máx. participantes</Label>
           <Input
             id="max-participants"
-            name="max-participants"
+            name="maxParticipants"
             type="number"
             min={2}
             max={100}
@@ -133,7 +146,7 @@ export function CreatePollForm() {
           </Label>
           <Input
             id="time-limit"
-            name="time-limit"
+            name="timeLimitMinutes"
             type="number"
             min={5}
             max={1440}

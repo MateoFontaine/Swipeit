@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { startPoll } from "@/lib/polls/actions";
+import type { StartPollResult } from "@/lib/polls/mutations";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 type StartPollButtonProps = {
@@ -18,16 +18,24 @@ export function StartPollButton({ pollId }: StartPollButtonProps) {
     setLoading(true);
     setError("");
 
-    const result = await startPoll(pollId);
+    try {
+      const response = await fetch(`/api/polls/${pollId}/start`, {
+        method: "POST",
+      });
+      const result = (await response.json()) as StartPollResult;
 
-    if (!result.success) {
-      setError(result.error);
+      if (!result.success) {
+        setError(result.error);
+        setLoading(false);
+        return;
+      }
+
+      router.refresh();
       setLoading(false);
-      return;
+    } catch {
+      setError("No pudimos conectar con el servidor. Intentá de nuevo.");
+      setLoading(false);
     }
-
-    router.refresh();
-    setLoading(false);
   }
 
   return (

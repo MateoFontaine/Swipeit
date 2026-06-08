@@ -1,6 +1,8 @@
 import { HostShell } from "@/components/host/host-shell";
 import { CreatePollForm } from "@/components/polls/create-poll-form";
 
+export const dynamic = "force-dynamic";
+
 export default function NuevaEncuestaPage() {
   return (
     <HostShell backHref="/dashboard" backLabel="Dashboard">
