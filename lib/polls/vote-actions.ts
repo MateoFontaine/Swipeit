@@ -15,7 +15,14 @@ import {
 } from "./vote-validation";
 
 export type SubmitVotesResult =
-  | { success: true; pollClosed: boolean; pollStatus: PollStatus }
+  | {
+      success: true;
+      pollStatus: PollStatus;
+      /** true cuando la encuesta terminó con resultados finales */
+      pollFinished: boolean;
+      /** true cuando todos votaron round 1 y hubo empate → ballotage */
+      ballotageStarted: boolean;
+    }
   | { success: false; error: string };
 
 export type ParticipantProgress = {
@@ -94,20 +101,6 @@ export async function checkPollClosure(
     reason?: string;
     ballotage?: boolean;
   };
-
-  if (result.closed || result.status === "ballotage" || result.status === "resultados") {
-    const poll = await supabase
-      .from("polls")
-      .select("share_token")
-      .eq("id", pollId)
-      .maybeSingle<Pick<Poll, "share_token">>();
-
-    if (poll.data?.share_token) {
-      revalidatePath(`/poll/${poll.data.share_token}`);
-      revalidatePath(`/poll/${poll.data.share_token}/vote`);
-    }
-    revalidatePath("/dashboard");
-  }
 
   return {
     closed: result.closed ?? false,
@@ -221,15 +214,24 @@ export async function submitVotes(
 
     const closure = await checkPollClosure(pollId);
 
-    if (poll.share_token) {
+    if (
+      closure.closed ||
+      closure.status === "ballotage" ||
+      closure.status === "resultados"
+    ) {
       revalidatePath(`/poll/${poll.share_token}`);
       revalidatePath(`/poll/${poll.share_token}/vote`);
+      revalidatePath(`/dashboard/${pollId}`);
+      revalidatePath("/dashboard");
     }
+
+    const newStatus = closure.status ?? poll.status;
 
     return {
       success: true,
-      pollClosed: closure.closed || closure.status === "resultados",
-      pollStatus: closure.status ?? poll.status,
+      pollStatus: newStatus,
+      pollFinished: newStatus === "resultados",
+      ballotageStarted: newStatus === "ballotage",
     };
   } catch (error) {
     console.error("submitVotes unexpected error:", error);

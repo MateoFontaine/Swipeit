@@ -313,6 +313,46 @@ export type Database = {
         Args: { p_poll_id: string; p_round: number };
         Returns: { option_id: string; yes_count: number }[];
       };
+      get_participant_count: {
+        Args: { p_poll_id: string };
+        Returns: number;
+      };
+      get_participant_polls: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          host_id: string;
+          title: string;
+          description: string | null;
+          max_participants: number;
+          time_limit_minutes: number | null;
+          status: PollStatus;
+          share_token: string;
+          created_at: string;
+          started_at: string | null;
+          closes_at: string | null;
+          ballotage_option_ids: string[] | null;
+          winner_option_ids: string[] | null;
+          closed_at: string | null;
+          winner_label: string | null;
+        }[];
+      };
+      get_participant_poll: {
+        Args: { p_poll_id: string };
+        Returns: Poll | null;
+      };
+      link_participant_to_user: {
+        Args: { p_participant_id: string };
+        Returns: {
+          success: boolean;
+          error?: string;
+          participant_id?: string;
+          nickname?: string;
+          linked?: boolean;
+          reconnected?: boolean;
+          message?: string;
+        };
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

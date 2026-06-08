@@ -270,6 +270,7 @@ begin
     'winner_option_ids', to_jsonb(coalesce(poll_record.winner_option_ids, array[]::uuid[])),
     'ranking', ranking
   );
+end;
 $$;
 
 grant execute on function public.get_poll_results(uuid) to anon, authenticated;
@@ -392,6 +393,7 @@ begin
     'participants', participants_json,
     'partial_counts', partial_counts
   );
+end;
 $$;
 
 grant execute on function public.get_poll_live_stats(uuid) to authenticated;

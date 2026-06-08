@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { LinkAccountChecker } from "@/components/poll/link-account-banner";
 import { PollShell } from "@/components/poll/poll-shell";
 import { VoteInterface } from "@/components/poll/vote-interface";
 import { PollStatusBadge } from "@/components/polls/poll-status-badge";
@@ -6,8 +7,6 @@ import {
   getPollByShareToken,
   getPollOptionsByShareToken,
 } from "@/lib/polls/public-queries";
-import { checkPollClosureByToken } from "@/lib/polls/vote-actions";
-
 type VotePageProps = {
   params: Promise<{ token: string }>;
 };
@@ -16,8 +15,6 @@ export const dynamic = "force-dynamic";
 
 export default async function VotePage({ params }: VotePageProps) {
   const { token } = await params;
-
-  await checkPollClosureByToken(token);
 
   const poll = await getPollByShareToken(token);
 
@@ -54,14 +51,14 @@ export default async function VotePage({ params }: VotePageProps) {
 
         {isBallotage && (
           <p className="mt-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800 leading-relaxed">
-            Hubo empate en el primer lugar. Votá de nuevo solo entre las
-            opciones empatadas ({options.length}{" "}
-            {options.length === 1 ? "opción" : "opciones"}).
+            Segunda vuelta: elegí entre estas {options.length}{" "}
+            {options.length === 1 ? "opción" : "opciones"}.
           </p>
         )}
       </div>
 
       <div className="mt-6">
+        <LinkAccountChecker pollId={poll.id} shareToken={token} />
         <VoteInterface
           pollId={poll.id}
           shareToken={token}

@@ -2,11 +2,11 @@ import Link from "next/link";
 import { EmailPasswordForm } from "@/components/auth/email-password-form";
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; redirect?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { error } = await searchParams;
+  const { error, redirect: redirectTo } = await searchParams;
 
   return (
     <div className="rounded-2xl border border-border bg-card p-8 shadow-xl shadow-black/6">
@@ -28,13 +28,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       )}
 
       <div className="mt-6">
-        <EmailPasswordForm mode="login" />
+        <EmailPasswordForm mode="login" redirectTo={redirectTo} />
       </div>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         ¿No tenés cuenta?{" "}
         <Link
-          href="/register"
+          href={
+            redirectTo
+              ? `/register?redirect=${encodeURIComponent(redirectTo)}`
+              : "/register"
+          }
           className="font-medium text-accent hover:underline"
         >
           Registrate

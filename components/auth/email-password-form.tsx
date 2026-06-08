@@ -9,10 +9,19 @@ import { SubmitButton } from "@/components/ui/submit-button";
 
 type EmailPasswordFormProps = {
   mode: "login" | "register";
+  redirectTo?: string;
 };
 
-export function EmailPasswordForm({ mode }: EmailPasswordFormProps) {
+function safeRedirectPath(path: string | null | undefined): string {
+  if (!path || !path.startsWith("/") || path.startsWith("//")) {
+    return "/dashboard";
+  }
+  return path;
+}
+
+export function EmailPasswordForm({ mode, redirectTo }: EmailPasswordFormProps) {
   const router = useRouter();
+  const afterAuthPath = safeRedirectPath(redirectTo);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -55,7 +64,7 @@ export function EmailPasswordForm({ mode }: EmailPasswordFormProps) {
       }
 
       if (data.session) {
-        router.push("/dashboard");
+        router.push(afterAuthPath);
         router.refresh();
         return;
       }
@@ -78,7 +87,7 @@ export function EmailPasswordForm({ mode }: EmailPasswordFormProps) {
       return;
     }
 
-    router.push("/dashboard");
+    router.push(afterAuthPath);
     router.refresh();
   }
 

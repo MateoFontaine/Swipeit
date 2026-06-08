@@ -4,6 +4,13 @@ import { NextResponse, type NextRequest } from "next/server";
 const AUTH_ROUTES = ["/login", "/register"];
 const PROTECTED_PREFIXES = ["/dashboard"];
 
+function safeRedirectPath(path: string | null): string {
+  if (!path || !path.startsWith("/") || path.startsWith("//")) {
+    return "/dashboard";
+  }
+  return path;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -55,7 +62,8 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute && user && !isServerAction) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = safeRedirectPath(request.nextUrl.searchParams.get("redirect"));
+    url.search = "";
     const redirectResponse = NextResponse.redirect(url);
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie.name, cookie.value, cookie);

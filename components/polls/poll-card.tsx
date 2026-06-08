@@ -1,16 +1,25 @@
 import Link from "next/link";
 import { formatPollDate } from "@/lib/polls/constants";
-import type { Poll } from "@/types";
+import type { PollWithWinnerLabel } from "@/lib/polls/winner-labels";
 import { PollStatusBadge } from "./poll-status-badge";
 
 type PollCardProps = {
-  poll: Poll;
+  poll: PollWithWinnerLabel;
+  href?: string;
+  dateLabel?: string;
 };
 
-export function PollCard({ poll }: PollCardProps) {
+export function PollCard({
+  poll,
+  href = `/dashboard/${poll.id}`,
+  dateLabel = "Creada",
+}: PollCardProps) {
+  const showWinner =
+    ["resultados", "cerrado"].includes(poll.status) && poll.winner_label;
+
   return (
     <Link
-      href={`/dashboard/${poll.id}`}
+      href={href}
       className="block rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-accent/40 hover:shadow-md active:scale-[0.99]"
     >
       <div className="flex items-start justify-between gap-3">
@@ -24,8 +33,16 @@ export function PollCard({ poll }: PollCardProps) {
           {poll.description}
         </p>
       )}
+      {showWinner && (
+        <p className="mt-2 text-sm text-emerald-700">
+          <span className="font-medium">Ganador:</span> {poll.winner_label}
+        </p>
+      )}
       <p className="mt-3 text-xs text-muted-foreground">
-        Creada {formatPollDate(poll.created_at)}
+        {dateLabel} {formatPollDate(poll.created_at)}
+        {poll.closed_at && (
+          <> · Cerrada {formatPollDate(poll.closed_at)}</>
+        )}
       </p>
     </Link>
   );

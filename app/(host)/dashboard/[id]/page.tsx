@@ -8,9 +8,9 @@ import { PollStatusBadge } from "@/components/polls/poll-status-badge";
 import { StartPollButton } from "@/components/polls/start-poll-button";
 import { getHostPoll } from "@/lib/polls/queries";
 import { formatPollDate } from "@/lib/polls/constants";
-import { getPollResults } from "@/lib/polls/results";
+import { FinalizePollButton } from "@/components/polls/finalize-poll-button";
+import { getBallotageOptions, getPollResults } from "@/lib/polls/results";
 import { getPollSharePath, getPollShareUrl } from "@/lib/polls/utils";
-import { checkPollClosure } from "@/lib/polls/vote-actions";
 import { createClient } from "@/lib/supabase/server";
 import type { PollOption } from "@/types/database";
 
@@ -30,12 +30,7 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
     redirect("/login");
   }
 
-  let poll = await getHostPoll(id);
-
-  if (poll && ["votando", "ballotage"].includes(poll.status)) {
-    await checkPollClosure(id);
-    poll = await getHostPoll(id);
-  }
+  const poll = await getHostPoll(id);
 
   if (!poll) {
     notFound();
@@ -54,7 +49,11 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
       ? await getPollResults(poll.share_token)
       : null;
 
-  const showLiveView = ["votando", "ballotage"].includes(poll.status);
+  const showLiveView = ["esperando", "votando", "ballotage"].includes(
+    poll.status
+  );
+  const ballotageOptions =
+    poll.status === "ballotage" ? await getBallotageOptions(poll.id) : [];
 
   return (
     <HostShell backHref="/dashboard" backLabel="Dashboard">
@@ -135,28 +134,74 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
         </div>
       </section>
 
+      {showLiveView && <HostLiveView pollId={poll.id} initialStatus={poll.status} />}
+
       {poll.status === "esperando" && (
-        <section className="mt-6">
-          <p className="mb-3 text-sm text-muted-foreground">
-            Cuando todos estén listos, iniciá la votación. Los participantes
-            podrán swipear las opciones.
+        <section className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <h2 className="text-lg font-semibold">Iniciar votación</h2>
+          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+            Primero compartí el link y esperá a que se unan todos. Cuando estén
+            listos, iniciá la votación. Se necesitan al menos 2 participantes.
           </p>
-          <StartPollButton pollId={poll.id} />
+          <div className="mt-4">
+            <StartPollButton pollId={poll.id} />
+          </div>
         </section>
       )}
 
-      {showLiveView && (
-        <>
-          <HostLiveView pollId={poll.id} initialStatus={poll.status} />
-          <p className="mt-4 text-center">
-            <Link
-              href={getPollSharePath(poll.share_token)}
-              className="text-sm font-semibold text-accent hover:underline"
-            >
-              Ver encuesta pública →
-            </Link>
+      {poll.status === "ballotage" && (
+        <section className="mt-6 rounded-2xl border border-violet-200 bg-violet-50 p-6">
+          <h2 className="text-lg font-semibold text-violet-900">
+            Hubo empate — ballotage
+          </h2>
+          <p className="mt-2 text-sm text-violet-800 leading-relaxed">
+            Todos votaron en la primera ronda y hubo empate en el primer lugar.
+            Compartí el link de nuevo para que los participantes vuelvan a votar
+            entre las opciones empatadas.
           </p>
-        </>
+
+          {ballotageOptions.length > 0 && (
+            <ul className="mt-4 flex flex-col gap-2">
+              {ballotageOptions.map((option) => (
+                <li
+                  key={option.id}
+                  className="rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-medium text-violet-900"
+                >
+                  {option.text}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="mt-5 flex items-stretch gap-2">
+            <div className="flex min-w-0 flex-1 items-center rounded-2xl border border-violet-200 bg-white px-4 py-3">
+              <p className="truncate font-mono text-sm text-violet-900">
+                {shareUrl}
+              </p>
+            </div>
+            <CopyLinkButton url={shareUrl} />
+          </div>
+
+          <p className="mt-4 text-xs text-violet-700">
+            Cuando todos voten de nuevo, o si querés cerrar antes, finalizá la
+            encuesta abajo.
+          </p>
+
+          <div className="mt-4">
+            <FinalizePollButton pollId={poll.id} />
+          </div>
+        </section>
+      )}
+
+      {poll.status === "votando" && (
+        <p className="mt-4 text-center">
+          <Link
+            href={getPollSharePath(poll.share_token)}
+            className="text-sm font-semibold text-accent hover:underline"
+          >
+            Ver encuesta pública →
+          </Link>
+        </p>
       )}
 
       {results && (

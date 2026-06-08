@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { SwipeDirection } from "@/components/poll/swipe-card";
 import { SwipeStack } from "@/components/poll/swipe-stack";
-import { VoteWaiting } from "@/components/poll/vote-waiting";
+import { VoteDone } from "@/components/poll/vote-done";
 import {
   getStoredParticipantId,
   storeParticipantId,
@@ -24,7 +24,7 @@ type VoteInterfaceProps = {
   isBallotage?: boolean;
 };
 
-type VotePhase = "checking" | "swipe" | "submitting" | "waiting" | "error";
+type VotePhase = "checking" | "swipe" | "submitting" | "done" | "error";
 
 export function VoteInterface({
   pollId,
@@ -62,7 +62,7 @@ export function VoteInterface({
               pollId,
               shareToken
             );
-            setPhase(progress.hasVoted ? "waiting" : "swipe");
+            setPhase(progress.hasVoted ? "done" : "swipe");
             return;
           }
         } catch {
@@ -92,7 +92,7 @@ export function VoteInterface({
             pollId,
             shareToken
           );
-          setPhase(progress.hasVoted ? "waiting" : "swipe");
+          setPhase(progress.hasVoted ? "done" : "swipe");
           return;
         }
       }
@@ -122,17 +122,14 @@ export function VoteInterface({
       );
 
       if (result.success) {
-        setPhase("waiting");
-        if (result.pollClosed) {
-          router.refresh();
-        }
+        setPhase("done");
         return;
       }
 
       setError(result.error);
       setPhase("error");
     },
-    [participantId, pollId, shareToken, router]
+    [participantId, pollId, shareToken]
   );
 
   const handleComplete = useCallback(
@@ -157,8 +154,8 @@ export function VoteInterface({
     );
   }
 
-  if (phase === "waiting" && nickname) {
-    return <VoteWaiting nickname={nickname} shareToken={shareToken} />;
+  if (phase === "done" && nickname) {
+    return <VoteDone nickname={nickname} />;
   }
 
   if (phase === "submitting") {
@@ -200,7 +197,7 @@ export function VoteInterface({
   return (
     <div>
       <p className="mb-6 text-center text-sm text-muted-foreground">
-        {isBallotage ? "Ballotage" : "Votando"} como{" "}
+        {isBallotage ? "Segunda vuelta" : "Votando"} como{" "}
         <span className="font-semibold text-foreground">{nickname}</span>
       </p>
       <SwipeStack options={options} onComplete={handleComplete} />

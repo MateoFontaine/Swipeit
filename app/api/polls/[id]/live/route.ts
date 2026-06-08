@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPollLiveStats } from "@/lib/polls/results";
 import { getHostPoll } from "@/lib/polls/queries";
+import { checkPollClosure } from "@/lib/polls/vote-actions";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -13,6 +14,10 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
   if (!poll) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
+  if (["votando", "ballotage"].includes(poll.status)) {
+    await checkPollClosure(id);
   }
 
   const stats = await getPollLiveStats(id);

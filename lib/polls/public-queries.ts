@@ -20,12 +20,16 @@ export async function getPollByShareToken(
 export async function getParticipantCount(pollId: string): Promise<number> {
   const supabase = await createClient();
 
-  const { count } = await supabase
-    .from("participants")
-    .select("*", { count: "exact", head: true })
-    .eq("poll_id", pollId);
+  const { data, error } = await supabase.rpc("get_participant_count", {
+    p_poll_id: pollId,
+  });
 
-  return count ?? 0;
+  if (error) {
+    console.error("getParticipantCount error:", error);
+    return 0;
+  }
+
+  return (data as number) ?? 0;
 }
 
 export async function getParticipantByUserId(

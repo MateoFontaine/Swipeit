@@ -141,6 +141,26 @@ export async function startPoll(pollId: string): Promise<StartPollResult> {
       };
     }
 
+    const { data: participantCount, error: countError } = await supabase.rpc(
+      "get_participant_count",
+      { p_poll_id: pollId }
+    );
+
+    if (countError) {
+      return {
+        success: false,
+        error: "No pudimos verificar los participantes. Intentá de nuevo.",
+      };
+    }
+
+    if ((participantCount as number) < 2) {
+      return {
+        success: false,
+        error:
+          "Necesitás al menos 2 participantes antes de iniciar la votación.",
+      };
+    }
+
     const startedAt = new Date();
     const closesAt = poll.time_limit_minutes
       ? new Date(startedAt.getTime() + poll.time_limit_minutes * 60 * 1000)
@@ -162,8 +182,17 @@ export async function startPoll(pollId: string): Promise<StartPollResult> {
       };
     }
 
+    const { data: pollRow } = await supabase
+      .from("polls")
+      .select("share_token")
+      .eq("id", pollId)
+      .maybeSingle<Pick<Poll, "share_token">>();
+
     revalidatePath("/dashboard");
     revalidatePath(`/dashboard/${pollId}`);
+    if (pollRow?.share_token) {
+      revalidatePath(`/poll/${pollRow.share_token}`);
+    }
 
     return { success: true };
   } catch (error) {

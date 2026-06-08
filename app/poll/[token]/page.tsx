@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { LinkAccountChecker } from "@/components/poll/link-account-banner";
 import { PollLobby } from "@/components/poll/poll-lobby";
 import { PollResults } from "@/components/poll/poll-results";
 import { PollShell } from "@/components/poll/poll-shell";
@@ -12,7 +13,6 @@ import {
   finalizePoll,
   getPollResults,
 } from "@/lib/polls/results";
-import { checkPollClosureByToken } from "@/lib/polls/vote-actions";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/database";
 
@@ -24,8 +24,6 @@ export const dynamic = "force-dynamic";
 
 export default async function PollPage({ params }: PollPageProps) {
   const { token } = await params;
-
-  await checkPollClosureByToken(token);
 
   const poll = await getPollByShareToken(token);
 
@@ -106,6 +104,9 @@ export default async function PollPage({ params }: PollPageProps) {
       </div>
 
       <div className="mt-6">
+        {!results && (
+          <LinkAccountChecker pollId={poll.id} shareToken={token} />
+        )}
         {results ? (
           <PollResults pollTitle={poll.title} results={results} />
         ) : (

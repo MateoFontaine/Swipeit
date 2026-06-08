@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { PollStatus } from "@/types";
-import type { Poll } from "@/types/database";
+import type { Poll, PollOption } from "@/types/database";
+import { getHostPoll } from "./queries";
 import { getPollByShareToken } from "./public-queries";
 
 export type ResultRankingEntry = {
@@ -76,8 +77,6 @@ export async function calculateResults(
     error?: string;
   };
 
-  await revalidatePollPaths(supabase, pollId);
-
   return {
     status: result.status ?? "votando",
     ballotage: result.status === "ballotage",
@@ -99,7 +98,6 @@ export async function finalizePoll(pollId: string): Promise<PollStatus> {
   }
 
   const result = data as { status?: PollStatus; finalized?: boolean };
-  await revalidatePollPaths(supabase, pollId);
 
   return result.status ?? "cerrado";
 }
@@ -139,6 +137,76 @@ export async function getPollResults(
   };
 }
 
+export async function getBallotageOptions(
+  pollId: string
+): Promise<Pick<PollOption, "id" | "text" | "sort_order">[]> {
+  const supabase = await createClient();
+
+  const { data: poll } = await supabase
+    .from("polls")
+    .select("ballotage_option_ids")
+    .eq("id", pollId)
+    .maybeSingle<Pick<Poll, "ballotage_option_ids">>();
+
+  if (!poll?.ballotage_option_ids?.length) {
+    return [];
+  }
+
+  const { data: options } = await supabase
+    .from("poll_options")
+    .select("id, text, sort_order")
+    .eq("poll_id", pollId)
+    .in("id", poll.ballotage_option_ids)
+    .order("sort_order", { ascending: true })
+    .returns<Pick<PollOption, "id" | "text" | "sort_order">[]>();
+
+  return options ?? [];
+}
+
+export type HostFinalizeResult =
+  | { success: true; status: PollStatus }
+  | { success: false; error: string };
+
+export async function hostFinalizePoll(
+  pollId: string
+): Promise<HostFinalizeResult> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "Tenés que iniciar sesión." };
+  }
+
+  const poll = await getHostPoll(pollId);
+
+  if (!poll) {
+    return { success: false, error: "No encontramos esa encuesta." };
+  }
+
+  if (!["ballotage", "votando"].includes(poll.status)) {
+    return {
+      success: false,
+      error: "Solo podés finalizar encuestas en votación o ballotage.",
+    };
+  }
+
+  const outcome = await calculateResults(pollId);
+
+  if (outcome.error) {
+    return { success: false, error: "No pudimos calcular los resultados." };
+  }
+
+  revalidatePath(`/poll/${poll.share_token}`);
+  revalidatePath(`/poll/${poll.share_token}/vote`);
+  revalidatePath(`/dashboard/${pollId}`);
+  revalidatePath("/dashboard");
+
+  return { success: true, status: outcome.status };
+}
+
 export async function getPollLiveStats(
   pollId: string
 ): Promise<PollLiveStats | null> {
@@ -154,23 +222,5 @@ export async function getPollLiveStats(
   }
 
   return data as PollLiveStats;
-}
-
-async function revalidatePollPaths(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  pollId: string
-) {
-  const { data: poll } = await supabase
-    .from("polls")
-    .select("share_token")
-    .eq("id", pollId)
-    .maybeSingle<Pick<Poll, "share_token">>();
-
-  if (poll?.share_token) {
-    revalidatePath(`/poll/${poll.share_token}`);
-    revalidatePath(`/poll/${poll.share_token}/vote`);
-  }
-  revalidatePath(`/dashboard/${pollId}`);
-  revalidatePath("/dashboard");
 }
 
