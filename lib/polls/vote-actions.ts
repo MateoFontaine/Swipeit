@@ -92,9 +92,10 @@ export async function checkPollClosure(
     closed?: boolean;
     status?: PollStatus;
     reason?: string;
+    ballotage?: boolean;
   };
 
-  if (result.closed) {
+  if (result.closed || result.status === "ballotage" || result.status === "resultados") {
     const poll = await supabase
       .from("polls")
       .select("share_token")
@@ -227,7 +228,7 @@ export async function submitVotes(
 
     return {
       success: true,
-      pollClosed: closure.closed,
+      pollClosed: closure.closed || closure.status === "resultados",
       pollStatus: closure.status ?? poll.status,
     };
   } catch (error) {

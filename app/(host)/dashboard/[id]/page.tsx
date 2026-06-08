@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { HostLiveView } from "@/components/host/host-live-view";
 import { HostShell } from "@/components/host/host-shell";
+import { PollResults } from "@/components/poll/poll-results";
 import { CopyLinkButton } from "@/components/polls/copy-link-button";
 import { PollStatusBadge } from "@/components/polls/poll-status-badge";
 import { StartPollButton } from "@/components/polls/start-poll-button";
 import { getHostPoll } from "@/lib/polls/queries";
 import { formatPollDate } from "@/lib/polls/constants";
+import { getPollResults } from "@/lib/polls/results";
 import { getPollSharePath, getPollShareUrl } from "@/lib/polls/utils";
+import { checkPollClosure } from "@/lib/polls/vote-actions";
 import { createClient } from "@/lib/supabase/server";
 import type { PollOption } from "@/types/database";
 
@@ -26,7 +30,12 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
     redirect("/login");
   }
 
-  const poll = await getHostPoll(id);
+  let poll = await getHostPoll(id);
+
+  if (poll && ["votando", "ballotage"].includes(poll.status)) {
+    await checkPollClosure(id);
+    poll = await getHostPoll(id);
+  }
 
   if (!poll) {
     notFound();
@@ -40,6 +49,12 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
     .returns<Pick<PollOption, "id" | "text" | "sort_order">[]>();
 
   const shareUrl = await getPollShareUrl(poll.share_token);
+  const results =
+    poll.status === "resultados" || poll.status === "cerrado"
+      ? await getPollResults(poll.share_token)
+      : null;
+
+  const showLiveView = ["votando", "ballotage"].includes(poll.status);
 
   return (
     <HostShell backHref="/dashboard" backLabel="Dashboard">
@@ -77,10 +92,13 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
 
         <p className="mt-4 text-xs text-muted-foreground">
           Creada {formatPollDate(poll.created_at)}
+          {poll.closed_at && (
+            <> · Cerrada {formatPollDate(poll.closed_at)}</>
+          )}
         </p>
       </div>
 
-      {options && options.length > 0 && (
+      {options && options.length > 0 && !results && (
         <section className="mt-6">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Opciones ({options.length})
@@ -127,33 +145,23 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
         </section>
       )}
 
-      {poll.status === "votando" && (
-        <section className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-          <p className="font-semibold text-emerald-900">Votación en curso</p>
-          <p className="mt-1 text-sm text-emerald-800">
-            Los participantes ya pueden votar.{" "}
-            {poll.closes_at && (
-              <>
-                Cierra el {formatPollDate(poll.closes_at)}.
-              </>
-            )}
+      {showLiveView && (
+        <>
+          <HostLiveView pollId={poll.id} initialStatus={poll.status} />
+          <p className="mt-4 text-center">
+            <Link
+              href={getPollSharePath(poll.share_token)}
+              className="text-sm font-semibold text-accent hover:underline"
+            >
+              Ver encuesta pública →
+            </Link>
           </p>
-          <Link
-            href={getPollSharePath(poll.share_token)}
-            className="mt-3 inline-block text-sm font-semibold text-emerald-700 hover:underline"
-          >
-            Ver encuesta pública →
-          </Link>
-        </section>
+        </>
       )}
 
-      {poll.status !== "esperando" && poll.status !== "votando" && (
-        <section className="mt-6 rounded-2xl border border-border bg-muted/30 p-5 text-sm text-muted-foreground">
-          Esta encuesta está en estado{" "}
-          <span className="font-semibold text-foreground">
-            {poll.status}
-          </span>
-          . Los resultados estarán disponibles en una próxima fase.
+      {results && (
+        <section className="mt-6">
+          <PollResults pollTitle={poll.title} results={results} />
         </section>
       )}
     </HostShell>

@@ -35,18 +35,30 @@ export default async function VotePage({ params }: VotePageProps) {
 
   const options = await getPollOptionsByShareToken(token);
 
+  const isBallotage = poll.status === "ballotage";
+
   return (
     <PollShell>
       <div className="rounded-2xl border border-border bg-card p-4 shadow-xl shadow-black/6 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-accent">Votación</p>
+            <p className="text-sm font-medium text-accent">
+              {isBallotage ? "Ballotage" : "Votación"}
+            </p>
             <h1 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
               {poll.title}
             </h1>
           </div>
           <PollStatusBadge status={poll.status} />
         </div>
+
+        {isBallotage && (
+          <p className="mt-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800 leading-relaxed">
+            Hubo empate en el primer lugar. Votá de nuevo solo entre las
+            opciones empatadas ({options.length}{" "}
+            {options.length === 1 ? "opción" : "opciones"}).
+          </p>
+        )}
       </div>
 
       <div className="mt-6">
@@ -54,6 +66,7 @@ export default async function VotePage({ params }: VotePageProps) {
           pollId={poll.id}
           shareToken={token}
           options={options}
+          isBallotage={isBallotage}
         />
       </div>
     </PollShell>

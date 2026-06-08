@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { PollLobby } from "@/components/poll/poll-lobby";
+import { PollResults } from "@/components/poll/poll-results";
 import { PollShell } from "@/components/poll/poll-shell";
 import { PollStatusBadge } from "@/components/polls/poll-status-badge";
 import {
@@ -7,6 +8,10 @@ import {
   getParticipantCount,
   getPollByShareToken,
 } from "@/lib/polls/public-queries";
+import {
+  finalizePoll,
+  getPollResults,
+} from "@/lib/polls/results";
 import { checkPollClosureByToken } from "@/lib/polls/vote-actions";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/database";
@@ -28,7 +33,19 @@ export default async function PollPage({ params }: PollPageProps) {
     notFound();
   }
 
+  if (poll.status === "resultados") {
+    await finalizePoll(poll.id);
+    const refreshed = await getPollByShareToken(token);
+    if (refreshed) {
+      Object.assign(poll, refreshed);
+    }
+  }
+
   const participantCount = await getParticipantCount(poll.id);
+  const results =
+    poll.status === "resultados" || poll.status === "cerrado"
+      ? await getPollResults(token)
+      : null;
 
   const supabase = await createClient();
   const {
@@ -76,24 +93,30 @@ export default async function PollPage({ params }: PollPageProps) {
           </p>
         )}
 
-        <p className="mt-4 text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">
-            {participantCount}
-          </span>
-          {participantCount === 1 ? " participante" : " participantes"}
-          {" · máx. "}
-          {poll.max_participants}
-        </p>
+        {!results && (
+          <p className="mt-4 text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">
+              {participantCount}
+            </span>
+            {participantCount === 1 ? " participante" : " participantes"}
+            {" · máx. "}
+            {poll.max_participants}
+          </p>
+        )}
       </div>
 
       <div className="mt-6">
-        <PollLobby
-          poll={poll}
-          shareToken={token}
-          participantCount={participantCount}
-          suggestedNickname={suggestedNickname}
-          accountParticipant={accountParticipant}
-        />
+        {results ? (
+          <PollResults pollTitle={poll.title} results={results} />
+        ) : (
+          <PollLobby
+            poll={poll}
+            shareToken={token}
+            participantCount={participantCount}
+            suggestedNickname={suggestedNickname}
+            accountParticipant={accountParticipant}
+          />
+        )}
       </div>
     </PollShell>
   );

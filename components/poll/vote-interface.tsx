@@ -21,6 +21,7 @@ type VoteInterfaceProps = {
   pollId: string;
   shareToken: string;
   options: PollOption[];
+  isBallotage?: boolean;
 };
 
 type VotePhase = "checking" | "swipe" | "submitting" | "waiting" | "error";
@@ -29,6 +30,7 @@ export function VoteInterface({
   pollId,
   shareToken,
   options,
+  isBallotage = false,
 }: VoteInterfaceProps) {
   const router = useRouter();
   const [participantId, setParticipantId] = useState<string | null>(null);
@@ -156,7 +158,7 @@ export function VoteInterface({
   }
 
   if (phase === "waiting" && nickname) {
-    return <VoteWaiting nickname={nickname} />;
+    return <VoteWaiting nickname={nickname} shareToken={shareToken} />;
   }
 
   if (phase === "submitting") {
@@ -198,7 +200,7 @@ export function VoteInterface({
   return (
     <div>
       <p className="mb-6 text-center text-sm text-muted-foreground">
-        Votando como{" "}
+        {isBallotage ? "Ballotage" : "Votando"} como{" "}
         <span className="font-semibold text-foreground">{nickname}</span>
       </p>
       <SwipeStack options={options} onComplete={handleComplete} />

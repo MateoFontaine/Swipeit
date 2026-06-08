@@ -5,18 +5,40 @@ import { useEffect } from "react";
 
 type VoteWaitingProps = {
   nickname: string;
+  shareToken: string;
 };
 
-export function VoteWaiting({ nickname }: VoteWaitingProps) {
+export function VoteWaiting({ nickname, shareToken }: VoteWaitingProps) {
   const router = useRouter();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      router.refresh();
-    }, 4000);
+    async function checkStatus() {
+      try {
+        const params = new URLSearchParams({ token: shareToken });
+        const response = await fetch(`/api/polls/status?${params}`);
+        if (!response.ok) return;
 
+        const data = await response.json();
+
+        if (data.status === "ballotage") {
+          router.replace(`/poll/${shareToken}/vote`);
+          return;
+        }
+
+        if (data.status === "resultados" || data.status === "cerrado") {
+          router.replace(`/poll/${shareToken}`);
+          return;
+        }
+
+        router.refresh();
+      } catch {
+        router.refresh();
+      }
+    }
+
+    const interval = setInterval(checkStatus, 4000);
     return () => clearInterval(interval);
-  }, [router]);
+  }, [router, shareToken]);
 
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">

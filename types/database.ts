@@ -18,6 +18,9 @@ export type Poll = {
   created_at: string;
   started_at: string | null;
   closes_at: string | null;
+  ballotage_option_ids: string[] | null;
+  winner_option_ids: string[] | null;
+  closed_at: string | null;
 };
 
 export type PollOption = {
@@ -85,6 +88,9 @@ export type Database = {
           created_at?: string;
           started_at?: string | null;
           closes_at?: string | null;
+          ballotage_option_ids?: string[] | null;
+          winner_option_ids?: string[] | null;
+          closed_at?: string | null;
         };
         Update: {
           id?: string;
@@ -98,6 +104,9 @@ export type Database = {
           created_at?: string;
           started_at?: string | null;
           closes_at?: string | null;
+          ballotage_option_ids?: string[] | null;
+          winner_option_ids?: string[] | null;
+          closed_at?: string | null;
         };
         Relationships: [
           {
@@ -238,7 +247,71 @@ export type Database = {
           status?: PollStatus;
           reason?: string;
           error?: string;
+          ballotage?: boolean;
+          tied?: boolean;
         };
+      };
+      calculate_results: {
+        Args: { p_poll_id: string };
+        Returns: {
+          status?: PollStatus;
+          ballotage_option_ids?: string[];
+          winner_option_ids?: string[];
+          tied?: boolean;
+          error?: string;
+        };
+      };
+      finalize_poll: {
+        Args: { p_poll_id: string };
+        Returns: {
+          status?: PollStatus;
+          finalized?: boolean;
+          error?: string;
+        };
+      };
+      get_poll_results: {
+        Args: { p_poll_id: string };
+        Returns: {
+          round: number;
+          is_tie: boolean;
+          winner_option_ids: string[];
+          ranking: {
+            option_id: string;
+            text: string;
+            sort_order: number;
+            yes_count: number;
+            is_winner: boolean;
+            yes_voters: string[];
+          }[];
+        } | null;
+      };
+      get_poll_live_stats: {
+        Args: { p_poll_id: string };
+        Returns: {
+          status: PollStatus;
+          participant_count: number;
+          max_participants: number;
+          voted_count: number;
+          round: number;
+          participants: {
+            id: string;
+            nickname: string;
+            joined_at: string;
+            has_voted: boolean;
+            votes: { option_id: string; value: boolean; round: number }[];
+          }[];
+          partial_counts: {
+            option_id: string;
+            text: string;
+            sort_order: number;
+            yes_count: number;
+            no_count: number;
+          }[];
+        } | null;
+      };
+      get_yes_counts: {
+        Args: { p_poll_id: string; p_round: number };
+        Returns: { option_id: string; yes_count: number }[];
       };
     };
     Enums: Record<string, never>;

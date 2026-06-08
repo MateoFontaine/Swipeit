@@ -7,7 +7,6 @@ import {
   getStoredParticipantId,
   storeParticipantId,
 } from "@/lib/polls/participant-storage";
-import { POLL_STATUS_LABELS } from "@/lib/polls/constants";
 import type { Poll, PollStatus } from "@/types";
 
 type PollLobbyProps = {
@@ -109,19 +108,7 @@ export function PollLobby({
   }
 
   if (poll.status === "cerrado" || poll.status === "resultados") {
-    return (
-      <div className="rounded-2xl border border-border bg-muted/40 p-6 text-center">
-        <p className="text-4xl" aria-hidden="true">
-          🏁
-        </p>
-        <p className="mt-3 font-semibold">
-          Esta encuesta está {POLL_STATUS_LABELS[poll.status].toLowerCase()}
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Los resultados estarán disponibles en una próxima actualización.
-        </p>
-      </div>
-    );
+    return null;
   }
 
   if (participant) {
