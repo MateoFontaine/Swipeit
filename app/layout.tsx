@@ -10,7 +10,7 @@ const geist = Geist({
 export const metadata: Metadata = {
   title: "Swipeit — Decisiones en grupo",
   description:
-    "Resolvé decisiones en grupo con swipe estilo Tinder. Creá una encuesta, compartí el link y votá.",
+    "Resolvé decisiones en grupo deslizando opciones. Creá una encuesta, compartí el link y votá.",
 };
 
 export default function RootLayout({

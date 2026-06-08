@@ -22,9 +22,19 @@ cp .env.local.example .env.local
 
 En el dashboard de Supabase: **Project Settings → API** → copiar `URL` y `anon` key.
 
-3. Habilitar **Email** en Authentication → Providers (para la Fase 02).
+3. En Authentication → Providers, habilitar **Email** (login con contraseña).
+   En **Authentication → Sign In / Providers → Email**, desactivá
+   **Confirm email** en desarrollo para entrar al instante tras registrarte.
 
-4. Arrancar el servidor de desarrollo:
+4. Aplicar migraciones SQL en Supabase (ver [supabase/README.md](./supabase/README.md)):
+   - [`20250608000000_profiles.sql`](./supabase/migrations/20250608000000_profiles.sql) — perfiles y auth (Fase 02)
+   - [`20250608100000_polls.sql`](./supabase/migrations/20250608100000_polls.sql) — encuestas, opciones, participantes, votos y RLS (Fase 03)
+
+5. En Authentication → URL Configuration, agregar redirect URL:
+   - `http://localhost:3000/auth/callback` (desarrollo)
+   - Tu dominio de producción + `/auth/callback` (deploy)
+
+6. Arrancar el servidor de desarrollo:
 
 ```bash
 npm run dev

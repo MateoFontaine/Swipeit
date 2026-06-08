@@ -8,11 +8,11 @@ type ButtonProps = Omit<React.ComponentProps<"a">, "href"> & {
 
 const variants = {
   primary:
-    "bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary-dark active:scale-[0.98]",
+    "bg-primary text-white shadow-lg shadow-black/15 hover:bg-primary-dark active:scale-[0.98]",
   secondary:
-    "bg-white text-foreground border border-border hover:bg-muted active:scale-[0.98]",
+    "bg-card text-foreground border border-border shadow-sm hover:bg-muted active:scale-[0.98]",
   outline:
-    "border-2 border-primary text-primary hover:bg-primary/5 active:scale-[0.98]",
+    "border-2 border-foreground text-foreground hover:bg-foreground/5 active:scale-[0.98]",
 };
 
 export function Button({
