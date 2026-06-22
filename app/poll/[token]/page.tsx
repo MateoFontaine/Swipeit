@@ -105,11 +105,11 @@ export default async function PollPage({ params }: PollPageProps) {
       </header>
 
       <div className="mt-8">
-        {!results && (
-          <LinkAccountChecker pollId={poll.id} shareToken={token} />
-        )}
         {results ? (
-          <PollResults pollTitle={poll.title} results={results} />
+          <>
+            <PollResults pollTitle={poll.title} results={results} />
+            <LinkAccountChecker pollId={poll.id} shareToken={token} />
+          </>
         ) : (
           <PollLobby
             poll={poll}

@@ -88,7 +88,7 @@ export function LinkAccountBanner({
     return (
       <div
         role="status"
-        className="mb-6 rounded-xl border border-emerald-200/80 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-800"
+        className="mt-8 rounded-xl border border-emerald-200/80 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-800"
       >
         {message}
       </div>
@@ -97,7 +97,7 @@ export function LinkAccountBanner({
 
   if (status === "linking") {
     return (
-      <div className="mb-6" aria-busy="true" aria-label="Vinculando cuenta…">
+      <div className="mt-8" aria-busy="true" aria-label="Vinculando cuenta…">
         <Skeleton className="h-16 rounded-xl" />
       </div>
     );
@@ -107,7 +107,7 @@ export function LinkAccountBanner({
     return (
       <div
         role="alert"
-        className="mb-6 rounded-xl border border-red-200/80 bg-red-50/80 px-4 py-3 text-sm text-red-700"
+        className="mt-8 rounded-xl border border-red-200/80 bg-red-50/80 px-4 py-3 text-sm text-red-700"
       >
         {message}
       </div>
@@ -118,7 +118,7 @@ export function LinkAccountBanner({
   const registerHref = `/register?redirect=${encodeURIComponent(`/poll/${shareToken}`)}`;
 
   return (
-    <div className="mb-6 rounded-xl border border-violet-200/60 bg-violet-500/[0.04] px-4 py-4 sm:px-5">
+    <div className="mt-8 rounded-xl border border-violet-200/60 bg-violet-500/[0.04] px-4 py-4 sm:px-5">
       <p className="text-sm font-semibold tracking-tight">
         ¿Querés guardar tu historial?
       </p>

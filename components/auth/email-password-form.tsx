@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AuthEmailSent } from "@/components/auth/auth-email-sent";
 import { createClient } from "@/lib/supabase/client";
 import { translateAuthError } from "@/lib/auth/errors";
 import { Input } from "@/components/ui/input";
@@ -71,9 +72,6 @@ export function EmailPasswordForm({ mode, redirectTo }: EmailPasswordFormProps) 
       }
 
       setStatus("sent");
-      setMessage(
-        "Cuenta creada. Revisá tu correo para confirmar y después iniciá sesión."
-      );
       return;
     }
 
@@ -93,19 +91,11 @@ export function EmailPasswordForm({ mode, redirectTo }: EmailPasswordFormProps) 
   }
 
   if (status === "sent") {
-    return (
-      <div
-        role="status"
-        className="rounded-2xl border border-violet-200/50 bg-violet-500/[0.04] px-5 py-6 text-center"
-      >
-        <p className="font-semibold tracking-tight text-foreground">
-          Revisá tu correo
-        </p>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {message}
-        </p>
-      </div>
-    );
+    const loginHref = redirectTo
+      ? `/login?redirect=${encodeURIComponent(afterAuthPath)}`
+      : "/login";
+
+    return <AuthEmailSent email={email.trim()} loginHref={loginHref} />;
   }
 
   return (

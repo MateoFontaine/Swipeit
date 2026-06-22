@@ -67,7 +67,7 @@ export function SwipeStack({ options, onComplete }: SwipeStackProps) {
 
   if (total === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-8 text-center">
+      <div className="rounded-xl border border-dashed border-violet-200/60 bg-violet-500/[0.03] px-5 py-8 text-center">
         <p className="text-sm text-muted-foreground">
           Esta encuesta no tiene opciones para votar.
         </p>
@@ -101,7 +101,7 @@ export function SwipeStack({ options, onComplete }: SwipeStackProps) {
           <button
             type="button"
             onClick={handleUndo}
-            className="text-sm font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            className="text-sm font-medium text-violet-600 transition-colors hover:text-violet-700"
           >
             Deshacer
           </button>
