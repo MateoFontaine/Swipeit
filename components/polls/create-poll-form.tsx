@@ -13,6 +13,20 @@ import { cn } from "@/lib/utils";
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 20;
 
+const labelClass = "text-sm font-medium text-foreground/80";
+
+function FieldError({ id, message }: { id?: string; message: string }) {
+  return (
+    <p
+      id={id}
+      role="alert"
+      className="mt-2 rounded-lg border border-red-200/80 bg-red-50/80 px-3 py-2 text-sm text-red-700"
+    >
+      {message}
+    </p>
+  );
+}
+
 export function CreatePollForm() {
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -77,50 +91,52 @@ export function CreatePollForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div>
-        <Label htmlFor="title">Título</Label>
-        <Input
-          id="title"
-          name="title"
-          placeholder="¿Qué decidimos hoy?"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={100}
-          required
-          aria-invalid={!!fieldErrors.title}
-          aria-describedby={fieldErrors.title ? "title-error" : undefined}
-        />
-        {fieldErrors.title && (
-          <p id="title-error" role="alert" className="mt-2 text-sm text-red-600">
-            {fieldErrors.title}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="description">
-          Descripción{" "}
-          <span className="font-normal text-muted-foreground">(opcional)</span>
-        </Label>
-        <Textarea
-          id="description"
-          name="description"
-          placeholder="Contexto para los participantes…"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-        />
-        {fieldErrors.description && (
-          <p role="alert" className="mt-2 text-sm text-red-600">
-            {fieldErrors.description}
-          </p>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+      <div className="flex flex-col gap-5">
         <div>
-          <Label htmlFor="max-participants">Máx. participantes</Label>
+          <Label htmlFor="title" className={labelClass}>
+            Título
+          </Label>
+          <Input
+            id="title"
+            name="title"
+            placeholder="¿Qué decidimos hoy?"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={100}
+            required
+            aria-invalid={!!fieldErrors.title}
+            aria-describedby={fieldErrors.title ? "title-error" : undefined}
+          />
+          {fieldErrors.title && (
+            <FieldError id="title-error" message={fieldErrors.title} />
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="description" className={labelClass}>
+            Descripción{" "}
+            <span className="font-normal text-muted-foreground">(opcional)</span>
+          </Label>
+          <Textarea
+            id="description"
+            name="description"
+            placeholder="Contexto para los participantes…"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+          />
+          {fieldErrors.description && (
+            <FieldError message={fieldErrors.description} />
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="max-participants" className={labelClass}>
+            Máx. participantes
+          </Label>
           <Input
             id="max-participants"
             name="maxParticipants"
@@ -133,14 +149,12 @@ export function CreatePollForm() {
             required
           />
           {fieldErrors.maxParticipants && (
-            <p role="alert" className="mt-2 text-sm text-red-600">
-              {fieldErrors.maxParticipants}
-            </p>
+            <FieldError message={fieldErrors.maxParticipants} />
           )}
         </div>
 
         <div>
-          <Label htmlFor="time-limit">
+          <Label htmlFor="time-limit" className={labelClass}>
             Tiempo límite{" "}
             <span className="font-normal text-muted-foreground">(min)</span>
           </Label>
@@ -156,61 +170,60 @@ export function CreatePollForm() {
             onChange={(e) => setTimeLimitMinutes(e.target.value)}
           />
           {fieldErrors.timeLimitMinutes && (
-            <p role="alert" className="mt-2 text-sm text-red-600">
-              {fieldErrors.timeLimitMinutes}
-            </p>
+            <FieldError message={fieldErrors.timeLimitMinutes} />
           )}
         </div>
       </div>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 text-sm font-medium text-foreground">
-          Opciones
-        </legend>
-        <p className="-mt-1 text-xs text-muted-foreground">
-          Mínimo 2, máximo 20. Los participantes van a swipear cada una.
-        </p>
-
-        {options.map((option, index) => (
-          <div key={index} className="flex items-start gap-2">
-            <div className="flex-1">
-              <Input
-                aria-label={`Opción ${index + 1}`}
-                placeholder={`Opción ${index + 1}`}
-                value={option}
-                onChange={(e) => updateOption(index, e.target.value)}
-                maxLength={200}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => removeOption(index)}
-              disabled={options.length <= MIN_OPTIONS}
-              className={cn(
-                "inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-border text-lg transition-all",
-                "hover:bg-muted active:scale-[0.98]",
-                "disabled:cursor-not-allowed disabled:opacity-40"
-              )}
-              aria-label={`Quitar opción ${index + 1}`}
-            >
-              ×
-            </button>
-          </div>
-        ))}
-
-        {fieldErrors.options && (
-          <p role="alert" className="text-sm text-red-600">
-            {fieldErrors.options}
+      <fieldset className="flex flex-col gap-4">
+        <div>
+          <legend className="text-sm font-medium text-violet-600">
+            Opciones
+          </legend>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Mínimo 2, máximo 20. Los participantes van a swipear cada una.
           </p>
-        )}
+          <div className="mt-3 h-0.5 w-6 rounded-full bg-violet-500" aria-hidden />
+        </div>
+
+        <div className="flex flex-col gap-2.5">
+          {options.map((option, index) => (
+            <div key={index} className="flex items-start gap-2">
+              <div className="flex-1">
+                <Input
+                  aria-label={`Opción ${index + 1}`}
+                  placeholder={`Opción ${index + 1}`}
+                  value={option}
+                  onChange={(e) => updateOption(index, e.target.value)}
+                  maxLength={200}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => removeOption(index)}
+                disabled={options.length <= MIN_OPTIONS}
+                className={cn(
+                  "inline-flex h-14 w-12 shrink-0 items-center justify-center rounded-xl border border-border/80 text-lg text-muted-foreground transition-colors sm:w-14",
+                  "hover:border-violet-300/70 hover:text-violet-600 active:scale-[0.98]",
+                  "disabled:cursor-not-allowed disabled:opacity-40"
+                )}
+                aria-label={`Quitar opción ${index + 1}`}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {fieldErrors.options && <FieldError message={fieldErrors.options} />}
 
         <button
           type="button"
           onClick={addOption}
           disabled={options.length >= MAX_OPTIONS}
           className={cn(
-            "inline-flex h-12 items-center justify-center rounded-2xl border border-dashed border-border text-sm font-semibold text-muted-foreground transition-all",
-            "hover:border-accent hover:text-accent active:scale-[0.98]",
+            "inline-flex h-12 items-center justify-center rounded-xl border border-dashed border-violet-300/60 text-sm font-medium text-violet-600 transition-colors",
+            "hover:border-violet-400 hover:bg-violet-500/[0.04] active:scale-[0.98]",
             "disabled:cursor-not-allowed disabled:opacity-40"
           )}
         >
@@ -219,15 +232,12 @@ export function CreatePollForm() {
       </fieldset>
 
       {error && !Object.keys(fieldErrors).length && (
-        <p
-          role="alert"
-          className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-          {error}
-        </p>
+        <FieldError message={error} />
       )}
 
-      <SubmitButton loading={loading}>Crear encuesta</SubmitButton>
+      <SubmitButton loading={loading} className="shadow-violet-500/20">
+        Crear encuesta
+      </SubmitButton>
     </form>
   );
 }

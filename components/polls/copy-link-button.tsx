@@ -17,7 +17,6 @@ export function CopyLinkButton({ url, className }: CopyLinkButtonProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const input = document.createElement("input");
       input.value = url;
       document.body.appendChild(input);
@@ -34,9 +33,10 @@ export function CopyLinkButton({ url, className }: CopyLinkButtonProps) {
       type="button"
       onClick={handleCopy}
       className={cn(
-        "inline-flex h-12 shrink-0 items-center justify-center rounded-2xl border border-border bg-card px-5 text-sm font-semibold transition-all",
-        "hover:bg-muted active:scale-[0.98]",
-        copied && "border-emerald-300 bg-emerald-50 text-emerald-800",
+        "inline-flex h-14 shrink-0 items-center justify-center rounded-xl border px-5 text-sm font-semibold transition-colors",
+        copied
+          ? "border-emerald-300/80 bg-emerald-50 text-emerald-800"
+          : "border-border/80 bg-background text-foreground hover:border-violet-300/70 hover:text-violet-600 active:scale-[0.98]",
         className
       )}
     >

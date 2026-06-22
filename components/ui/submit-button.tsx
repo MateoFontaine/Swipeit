@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SubmitButtonProps = React.ComponentProps<"button"> & {
   loading?: boolean;
@@ -7,11 +8,11 @@ type SubmitButtonProps = React.ComponentProps<"button"> & {
 
 const variants = {
   primary:
-    "bg-primary text-white shadow-lg shadow-black/10 hover:bg-primary-dark active:scale-[0.98]",
+    "bg-violet-600 text-white shadow-lg shadow-violet-500/20 hover:bg-violet-700 active:scale-[0.98]",
   secondary:
-    "bg-card text-foreground border border-border shadow-sm hover:bg-muted active:scale-[0.98]",
+    "bg-background text-foreground border border-border/80 shadow-sm hover:border-violet-300/60 hover:bg-violet-500/[0.03] active:scale-[0.98]",
   success:
-    "bg-emerald-600 text-white shadow-lg shadow-black/10 hover:bg-emerald-700 active:scale-[0.98]",
+    "bg-emerald-600 text-white shadow-lg shadow-emerald-500/15 hover:bg-emerald-700 active:scale-[0.98]",
 };
 
 export function SubmitButton({
@@ -22,19 +23,27 @@ export function SubmitButton({
   disabled,
   ...props
 }: SubmitButtonProps) {
+  if (loading) {
+    return (
+      <div aria-busy="true" aria-label="Procesando…" className={cn("w-full", className)}>
+        <Skeleton className="h-14 w-full rounded-xl" />
+      </div>
+    );
+  }
+
   return (
     <button
       type="submit"
-      disabled={disabled || loading}
+      disabled={disabled}
       className={cn(
-        "inline-flex h-14 w-full items-center justify-center rounded-2xl px-6 text-base font-semibold transition-all",
+        "inline-flex h-14 w-full items-center justify-center rounded-xl px-6 text-base font-semibold transition-all",
         "disabled:cursor-not-allowed disabled:opacity-60",
         variants[variant],
         className
       )}
       {...props}
     >
-      {loading ? "Enviando…" : children}
+      {children}
     </button>
   );
 }

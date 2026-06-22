@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { resolveOptionImageUrls } from "@/lib/images/resolve-option-images";
 import { createClient } from "@/lib/supabase/server";
 import type { Poll } from "@/types/database";
 import {
@@ -66,10 +67,13 @@ export async function createPoll(
       };
     }
 
+    const imageUrls = await resolveOptionImageUrls(data.options);
+
     const optionsToInsert = data.options.map((text, index) => ({
       poll_id: poll.id,
       text,
       sort_order: index,
+      image_url: imageUrls[index],
     }));
 
     const { error: optionsError } = await supabase

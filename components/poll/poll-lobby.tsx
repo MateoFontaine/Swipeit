@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { JoinPollForm } from "@/components/poll/join-poll-form";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   getStoredParticipantId,
   storeParticipantId,
@@ -23,6 +24,18 @@ type LobbyParticipant = {
 };
 
 const ACTIVE_VOTE_STATUSES: PollStatus[] = ["votando", "ballotage"];
+
+function LobbySkeleton() {
+  return (
+    <div className="flex flex-col gap-4" aria-busy="true" aria-label="Cargando…">
+      <Skeleton className="h-5 w-40" />
+      <Skeleton className="h-4 w-full max-w-xs" />
+      <Skeleton className="mb-1 h-4 w-12" />
+      <Skeleton className="h-14 rounded-xl" />
+      <Skeleton className="h-14 w-full rounded-xl" />
+    </div>
+  );
+}
 
 function getJoinBlockReason(
   status: PollStatus,
@@ -139,11 +152,7 @@ export function PollLobby({
   }
 
   if (checking) {
-    return (
-      <div className="rounded-2xl border border-border bg-card p-8 text-center">
-        <p className="text-sm text-muted-foreground">Cargando…</p>
-      </div>
-    );
+    return <LobbySkeleton />;
   }
 
   if (poll.status === "cerrado" || poll.status === "resultados") {
@@ -153,59 +162,65 @@ export function PollLobby({
   if (participant) {
     if (poll.status === "esperando") {
       return (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
-          <p className="text-4xl text-center" aria-hidden="true">
-            ⏳
-          </p>
-          <p className="mt-3 text-center font-semibold text-amber-900">
+        <section className="rounded-xl border border-violet-200/60 bg-violet-500/[0.04] px-5 py-6 text-center sm:px-6">
+          <p className="text-sm font-medium text-violet-600">Sala de espera</p>
+          <p className="mt-2 text-lg font-semibold tracking-tight">
             ¡Ya estás adentro, {participant.nickname}!
           </p>
-          <p className="mt-2 text-center text-sm text-amber-800 leading-relaxed">
-            Ya estás en la sala de espera. El host va a iniciar la votación
-            cuando se unan todos. Esta página se actualiza sola.
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            El host va a iniciar la votación cuando se unan todos. Esta página
+            se actualiza sola.
           </p>
-          <p className="mt-3 text-center text-xs text-amber-700">
+          <p className="mt-4 text-xs text-muted-foreground">
             {participantCount}{" "}
             {participantCount === 1 ? "participante" : "participantes"} en la
             sala
           </p>
-        </div>
+        </section>
       );
     }
 
     return (
-      <div className="rounded-2xl border border-border bg-card p-6 text-center">
-        <p className="text-sm text-muted-foreground">Redirigiendo a votar…</p>
-      </div>
+      <section className="flex flex-col gap-3 py-2" aria-busy="true">
+        <p className="text-center text-sm text-muted-foreground">
+          Redirigiendo a votar…
+        </p>
+        <Skeleton className="h-14 rounded-xl" />
+        <Skeleton className="h-32 rounded-xl" />
+      </section>
     );
   }
 
   if (!canJoinNew && joinBlock) {
     return (
-      <div className="rounded-2xl border border-border bg-muted/40 p-6 text-center">
-        <p className="font-semibold">{joinBlock.title}</p>
-        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+      <section className="rounded-xl border border-border/60 bg-muted/30 px-5 py-6 text-center sm:px-6">
+        <p className="font-semibold tracking-tight">{joinBlock.title}</p>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           {joinBlock.message}
         </p>
         {isFull && (
-          <p className="mt-3 text-xs text-muted-foreground">
+          <p className="mt-4 text-xs text-muted-foreground">
             Capacidad: {participantCount} / {poll.max_participants}
           </p>
         )}
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-xl shadow-black/6">
-      <h2 className="text-lg font-semibold">Unite a la encuesta</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Elegí un nickname para participar. No hace falta crear cuenta.
+    <section>
+      <p className="text-sm font-medium text-violet-600">Participar</p>
+      <h2 className="mt-1 text-lg font-semibold tracking-tight">
+        Unite a la encuesta
+      </h2>
+      <div className="mt-3 h-0.5 w-6 rounded-full bg-violet-500" aria-hidden />
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+        Elegí un nickname. No hace falta crear cuenta.
       </p>
       <p className="mt-2 text-xs text-muted-foreground">
         {participantCount} de {poll.max_participants} participantes
       </p>
-      <div className="mt-5">
+      <div className="mt-6">
         <JoinPollForm
           shareToken={shareToken}
           pollId={poll.id}
@@ -213,6 +228,6 @@ export function PollLobby({
           onJoined={handleJoined}
         />
       </div>
-    </div>
+    </section>
   );
 }

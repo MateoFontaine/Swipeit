@@ -14,6 +14,19 @@ type JoinPollFormProps = {
   onJoined: (participantId: string, nickname: string) => void;
 };
 
+const labelClass = "text-sm font-medium text-foreground/80";
+
+function FieldError({ message }: { message: string }) {
+  return (
+    <p
+      role="alert"
+      className="rounded-lg border border-red-200/80 bg-red-50/80 px-3 py-2 text-sm text-red-700"
+    >
+      {message}
+    </p>
+  );
+}
+
 export function JoinPollForm({
   shareToken,
   pollId,
@@ -53,9 +66,11 @@ export function JoinPollForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div>
-        <Label htmlFor="nickname">Tu nickname</Label>
+        <Label htmlFor="nickname" className={labelClass}>
+          Tu nickname
+        </Label>
         <Input
           id="nickname"
           name="nickname"
@@ -65,22 +80,18 @@ export function JoinPollForm({
           maxLength={30}
           required
           autoComplete="nickname"
+          autoFocus
         />
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
           2–30 caracteres. Todos van a ver tu nickname al votar.
         </p>
       </div>
 
-      {error && (
-        <p
-          role="alert"
-          className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-          {error}
-        </p>
-      )}
+      {error && <FieldError message={error} />}
 
-      <SubmitButton loading={loading}>Unirme</SubmitButton>
+      <SubmitButton loading={loading} className="shadow-violet-500/20">
+        Unirme
+      </SubmitButton>
     </form>
   );
 }

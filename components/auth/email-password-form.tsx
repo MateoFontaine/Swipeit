@@ -5,6 +5,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { translateAuthError } from "@/lib/auth/errors";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 type EmailPasswordFormProps = {
@@ -95,13 +96,12 @@ export function EmailPasswordForm({ mode, redirectTo }: EmailPasswordFormProps) 
     return (
       <div
         role="status"
-        className="rounded-2xl border border-border bg-muted/50 p-6 text-center"
+        className="rounded-2xl border border-violet-200/50 bg-violet-500/[0.04] px-5 py-6 text-center"
       >
-        <p className="text-4xl" aria-hidden="true">
-          ✉️
+        <p className="font-semibold tracking-tight text-foreground">
+          Revisá tu correo
         </p>
-        <p className="mt-3 font-semibold text-foreground">Revisá tu correo</p>
-        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           {message}
         </p>
       </div>
@@ -109,11 +109,11 @@ export function EmailPasswordForm({ mode, redirectTo }: EmailPasswordFormProps) 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div>
-        <label htmlFor="email" className="sr-only">
+        <Label htmlFor="email" className="text-sm font-medium text-foreground/80">
           Email
-        </label>
+        </Label>
         <Input
           id="email"
           name="email"
@@ -128,9 +128,9 @@ export function EmailPasswordForm({ mode, redirectTo }: EmailPasswordFormProps) 
       </div>
 
       <div>
-        <label htmlFor="password" className="sr-only">
+        <Label htmlFor="password" className="text-sm font-medium text-foreground/80">
           Contraseña
-        </label>
+        </Label>
         <Input
           id="password"
           name="password"
@@ -140,7 +140,7 @@ export function EmailPasswordForm({ mode, redirectTo }: EmailPasswordFormProps) 
           }
           required
           minLength={6}
-          placeholder="Contraseña"
+          placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -148,9 +148,12 @@ export function EmailPasswordForm({ mode, redirectTo }: EmailPasswordFormProps) 
 
       {mode === "register" && (
         <div>
-          <label htmlFor="confirm-password" className="sr-only">
+          <Label
+            htmlFor="confirm-password"
+            className="text-sm font-medium text-foreground/80"
+          >
             Confirmar contraseña
-          </label>
+          </Label>
           <Input
             id="confirm-password"
             name="confirm-password"
@@ -158,7 +161,7 @@ export function EmailPasswordForm({ mode, redirectTo }: EmailPasswordFormProps) 
             autoComplete="new-password"
             required
             minLength={6}
-            placeholder="Confirmar contraseña"
+            placeholder="••••••••"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
@@ -168,13 +171,13 @@ export function EmailPasswordForm({ mode, redirectTo }: EmailPasswordFormProps) 
       {status === "error" && message && (
         <p
           role="alert"
-          className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-xl border border-red-200/80 bg-red-50/80 px-4 py-3 text-sm text-red-700"
         >
           {message}
         </p>
       )}
 
-      <SubmitButton loading={status === "loading"}>
+      <SubmitButton loading={status === "loading"} className="mt-1 shadow-violet-500/20">
         {mode === "register" ? "Crear cuenta" : "Iniciar sesión"}
       </SubmitButton>
     </form>

@@ -7,8 +7,6 @@ import type { PollOption } from "@/types/database";
 
 export type SwipeDirection = "yes" | "no";
 
-const EXIT_DISTANCE = 600;
-
 type SwipeCardProps = {
   option: PollOption;
   isTop: boolean;
@@ -31,7 +29,11 @@ export function SwipeCard({
   const dragStartTime = useRef(0);
   const isDragging = useRef(false);
 
-  const rotate = useTransform(x, [-280, 0, 280], [-22, 0, 22]);
+  const rotate = useTransform(x, (val) => {
+    const width = cardRef.current?.offsetWidth ?? 320;
+    const clamp = width * 0.85;
+    return Math.max(-22, Math.min(22, (val / clamp) * 22));
+  });
   const yesOpacity = useTransform(x, [0, 40, 100], [0, 0.5, 1]);
   const noOpacity = useTransform(x, [-100, -40, 0], [1, 0.5, 0]);
   const yesScale = useTransform(x, [0, 100], [0.7, 1.1]);
@@ -44,7 +46,9 @@ export function SwipeCard({
     dismissed.current = true;
     isDragging.current = false;
 
-    const targetX = direction === "yes" ? EXIT_DISTANCE : -EXIT_DISTANCE;
+    const width = cardRef.current?.offsetWidth ?? 320;
+    const exitDistance = Math.max(width * 1.45, 280);
+    const targetX = direction === "yes" ? exitDistance : -exitDistance;
     await animate(x, targetX, {
       type: "spring",
       stiffness: 320,
@@ -80,11 +84,21 @@ export function SwipeCard({
     snapBack();
   }
 
+  const wasTop = useRef(false);
+
   useEffect(() => {
     if (exitDirection && isTop) {
       flyOut(exitDirection);
     }
   }, [exitDirection, isTop]);
+
+  useEffect(() => {
+    if (isTop && !wasTop.current) {
+      x.set(0);
+      dismissed.current = false;
+    }
+    wasTop.current = isTop;
+  }, [isTop, option.id, x]);
 
   function handlePointerDown(e: React.PointerEvent) {
     if (!isTop || dismissed.current) return;

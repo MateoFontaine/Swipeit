@@ -22,6 +22,10 @@ cp .env.local.example .env.local
 
 En el dashboard de Supabase: **Project Settings → API** → copiar `URL` y `anon` key.
 
+   Para imágenes automáticas en las opciones, crear una API key en
+   [Pexels](https://www.pexels.com/api/) y agregar `PEXELS_API_KEY` en
+   `.env.local`. Sin esa key, las opciones usan un placeholder con gradiente.
+
 3. En Authentication → Providers, habilitar **Email** (login con contraseña).
    En **Authentication → Sign In / Providers → Email**, desactivá
    **Confirm email** en desarrollo para entrar al instante tras registrarte.

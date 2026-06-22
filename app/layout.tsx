@@ -8,9 +8,18 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Swipeit — Decisiones en grupo",
+  title: {
+    default: "Swipeit — Decisiones en grupo con swipe",
+    template: "%s | Swipeit",
+  },
   description:
     "Resolvé decisiones en grupo deslizando opciones. Creá una encuesta, compartí el link y votá.",
+  openGraph: {
+    title: "Swipeit — Decisiones en grupo con swipe",
+    description:
+      "Resolvé decisiones en grupo deslizando opciones. Creá una encuesta, compartí el link y votá.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

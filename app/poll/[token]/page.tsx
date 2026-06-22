@@ -9,10 +9,7 @@ import {
   getParticipantCount,
   getPollByShareToken,
 } from "@/lib/polls/public-queries";
-import {
-  finalizePoll,
-  getPollResults,
-} from "@/lib/polls/results";
+import { finalizePoll, getPollResults } from "@/lib/polls/results";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/database";
 
@@ -74,19 +71,23 @@ export default async function PollPage({ params }: PollPageProps) {
 
   return (
     <PollShell>
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-xl shadow-black/6">
+      <header>
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-accent">Encuesta</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-violet-600">Encuesta</p>
+            <h1 className="mt-2 text-[1.75rem] font-semibold leading-[1.15] tracking-tight sm:text-[2rem]">
               {poll.title}
             </h1>
           </div>
-          <PollStatusBadge status={poll.status} />
+          <PollStatusBadge status={poll.status} className="shrink-0" />
         </div>
+        <div
+          className="mt-4 h-0.5 w-8 rounded-full bg-violet-500"
+          aria-hidden
+        />
 
         {poll.description && (
-          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+          <p className="mt-4 text-[1rem] leading-relaxed text-muted-foreground">
             {poll.description}
           </p>
         )}
@@ -101,9 +102,9 @@ export default async function PollPage({ params }: PollPageProps) {
             {poll.max_participants}
           </p>
         )}
-      </div>
+      </header>
 
-      <div className="mt-6">
+      <div className="mt-8">
         {!results && (
           <LinkAccountChecker pollId={poll.id} shareToken={token} />
         )}

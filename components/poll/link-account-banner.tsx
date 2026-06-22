@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   getStoredParticipantId,
   storeParticipantId,
@@ -87,7 +88,7 @@ export function LinkAccountBanner({
     return (
       <div
         role="status"
-        className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+        className="mb-6 rounded-xl border border-emerald-200/80 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-800"
       >
         {message}
       </div>
@@ -96,8 +97,8 @@ export function LinkAccountBanner({
 
   if (status === "linking") {
     return (
-      <div className="mb-4 rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-        Vinculando tu cuenta…
+      <div className="mb-6" aria-busy="true" aria-label="Vinculando cuenta…">
+        <Skeleton className="h-16 rounded-xl" />
       </div>
     );
   }
@@ -106,7 +107,7 @@ export function LinkAccountBanner({
     return (
       <div
         role="alert"
-        className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+        className="mb-6 rounded-xl border border-red-200/80 bg-red-50/80 px-4 py-3 text-sm text-red-700"
       >
         {message}
       </div>
@@ -117,24 +118,23 @@ export function LinkAccountBanner({
   const registerHref = `/register?redirect=${encodeURIComponent(`/poll/${shareToken}`)}`;
 
   return (
-    <div className="mb-4 rounded-2xl border border-accent/30 bg-accent/5 px-4 py-4">
-      <p className="text-sm font-semibold text-foreground">
+    <div className="mb-6 rounded-xl border border-violet-200/60 bg-violet-500/[0.04] px-4 py-4 sm:px-5">
+      <p className="text-sm font-semibold tracking-tight">
         ¿Querés guardar tu historial?
       </p>
-      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-        Iniciá sesión para ver esta encuesta en tu dashboard y no perder tu
-        participación.
+      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+        Iniciá sesión para ver esta encuesta en tu dashboard.
       </p>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
         <Link
           href={loginHref}
-          className="inline-flex items-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent/90"
+          className="inline-flex h-11 items-center justify-center rounded-xl bg-violet-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
         >
-          Iniciar sesión para guardar historial
+          Iniciar sesión
         </Link>
         <Link
           href={registerHref}
-          className="inline-flex items-center rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted/50"
+          className="inline-flex h-11 items-center justify-center rounded-xl border border-border/80 px-4 text-sm font-semibold text-foreground transition-colors hover:border-violet-300/70 hover:text-violet-600"
         >
           Crear cuenta
         </Link>

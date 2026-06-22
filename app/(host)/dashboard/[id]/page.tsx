@@ -8,6 +8,7 @@ import { PollStatusBadge } from "@/components/polls/poll-status-badge";
 import { StartPollButton } from "@/components/polls/start-poll-button";
 import { getHostPoll } from "@/lib/polls/queries";
 import { formatPollDate } from "@/lib/polls/constants";
+import { enrichPollOptionsWithImages } from "@/lib/images/enrich-options";
 import { FinalizePollButton } from "@/components/polls/finalize-poll-button";
 import { getBallotageOptions, getPollResults } from "@/lib/polls/results";
 import { getPollSharePath, getPollShareUrl } from "@/lib/polls/utils";
@@ -36,12 +37,16 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
     notFound();
   }
 
-  const { data: options } = await supabase
+  const { data: rawOptions } = await supabase
     .from("poll_options")
-    .select("id, text, sort_order")
+    .select("id, poll_id, text, image_url, sort_order")
     .eq("poll_id", poll.id)
     .order("sort_order", { ascending: true })
-    .returns<Pick<PollOption, "id" | "text" | "sort_order">[]>();
+    .returns<PollOption[]>();
+
+  const options = rawOptions
+    ? await enrichPollOptionsWithImages(rawOptions, { persist: true })
+    : null;
 
   const shareUrl = await getPollShareUrl(poll.share_token);
   const results =
@@ -57,31 +62,35 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
 
   return (
     <HostShell backHref="/dashboard" backLabel="Dashboard">
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-xl shadow-black/6">
+      <header>
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-accent">Tu encuesta</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-violet-600">Tu encuesta</p>
+            <h1 className="mt-2 text-[1.75rem] font-semibold leading-[1.15] tracking-tight sm:text-[2rem]">
               {poll.title}
             </h1>
           </div>
-          <PollStatusBadge status={poll.status} />
+          <PollStatusBadge status={poll.status} className="shrink-0" />
         </div>
+        <div
+          className="mt-4 h-0.5 w-8 rounded-full bg-violet-500"
+          aria-hidden
+        />
 
         {poll.description && (
-          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+          <p className="mt-4 text-[1rem] leading-relaxed text-muted-foreground">
             {poll.description}
           </p>
         )}
 
-        <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-          <div>
+        <dl className="mt-5 grid grid-cols-2 gap-4 text-sm">
+          <div className="rounded-xl border border-border/60 bg-violet-500/[0.03] px-4 py-3">
             <dt className="text-muted-foreground">Participantes máx.</dt>
-            <dd className="font-semibold">{poll.max_participants}</dd>
+            <dd className="mt-0.5 font-semibold">{poll.max_participants}</dd>
           </div>
-          <div>
+          <div className="rounded-xl border border-border/60 bg-violet-500/[0.03] px-4 py-3">
             <dt className="text-muted-foreground">Tiempo límite</dt>
-            <dd className="font-semibold">
+            <dd className="mt-0.5 font-semibold">
               {poll.time_limit_minutes
                 ? `${poll.time_limit_minutes} min`
                 : "Sin límite"}
@@ -91,24 +100,24 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
 
         <p className="mt-4 text-xs text-muted-foreground">
           Creada {formatPollDate(poll.created_at)}
-          {poll.closed_at && (
-            <> · Cerrada {formatPollDate(poll.closed_at)}</>
-          )}
+          {poll.closed_at && <> · Cerrada {formatPollDate(poll.closed_at)}</>}
         </p>
-      </div>
+      </header>
 
       {options && options.length > 0 && !results && (
-        <section className="mt-6">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Opciones ({options.length})
+        <section className="mt-8">
+          <p className="text-sm font-medium text-violet-600">Opciones</p>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight">
+            {options.length} opciones
           </h2>
-          <ol className="flex flex-col gap-2">
+          <div className="mt-3 h-0.5 w-6 rounded-full bg-violet-500" aria-hidden />
+          <ol className="mt-4 flex flex-col gap-2">
             {options.map((option, index) => (
               <li
                 key={option.id}
-                className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm"
+                className="flex items-center gap-3 rounded-xl border border-border/60 px-4 py-3 text-sm"
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-500/10 text-xs font-semibold text-violet-600">
                   {index + 1}
                 </span>
                 <span className="font-medium">{option.text}</span>
@@ -118,14 +127,17 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
         </section>
       )}
 
-      <section className="mt-8 rounded-2xl border border-border bg-card p-6">
-        <h2 className="text-lg font-semibold">Link para compartir</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Enviá este link a los participantes para que se unan.
+      <section className="mt-8">
+        <p className="text-sm font-medium text-violet-600">Compartir</p>
+        <h2 className="mt-1 text-lg font-semibold tracking-tight">
+          Link para participantes
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Enviá este link para que se unan y voten.
         </p>
 
         <div className="mt-4 flex items-stretch gap-2">
-          <div className="flex min-w-0 flex-1 items-center rounded-2xl border border-border bg-muted/40 px-4 py-3">
+          <div className="flex min-w-0 flex-1 items-center rounded-xl border border-border/60 bg-violet-500/[0.03] px-4 py-3">
             <p className="truncate font-mono text-sm text-foreground">
               {shareUrl}
             </p>
@@ -134,30 +146,35 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
         </div>
       </section>
 
-      {showLiveView && <HostLiveView pollId={poll.id} initialStatus={poll.status} />}
+      {showLiveView && (
+        <HostLiveView pollId={poll.id} initialStatus={poll.status} />
+      )}
 
       {poll.status === "esperando" && (
-        <section className="mt-6 rounded-2xl border border-border bg-card p-6">
-          <h2 className="text-lg font-semibold">Iniciar votación</h2>
-          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-            Primero compartí el link y esperá a que se unan todos. Cuando estén
-            listos, iniciá la votación. Se necesitan al menos 2 participantes.
+        <section className="mt-8">
+          <p className="text-sm font-medium text-violet-600">Listo para votar</p>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight">
+            Iniciar votación
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Compartí el link y esperá a que se unan. Se necesitan al menos 2
+            participantes.
           </p>
-          <div className="mt-4">
+          <div className="mt-5">
             <StartPollButton pollId={poll.id} />
           </div>
         </section>
       )}
 
       {poll.status === "ballotage" && (
-        <section className="mt-6 rounded-2xl border border-violet-200 bg-violet-50 p-6">
-          <h2 className="text-lg font-semibold text-violet-900">
-            Hubo empate — ballotage
+        <section className="mt-8 rounded-xl border border-violet-200/60 bg-violet-500/[0.04] p-5 sm:p-6">
+          <p className="text-sm font-medium text-violet-600">Ballotage</p>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
+            Hubo empate
           </h2>
-          <p className="mt-2 text-sm text-violet-800 leading-relaxed">
-            Todos votaron en la primera ronda y hubo empate en el primer lugar.
-            Compartí el link de nuevo para que los participantes vuelvan a votar
-            entre las opciones empatadas.
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Compartí el link de nuevo para que voten entre las opciones
+            empatadas.
           </p>
 
           {ballotageOptions.length > 0 && (
@@ -165,7 +182,7 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
               {ballotageOptions.map((option) => (
                 <li
                   key={option.id}
-                  className="rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-medium text-violet-900"
+                  className="rounded-xl border border-violet-200/50 bg-background px-4 py-2.5 text-sm font-medium"
                 >
                   {option.text}
                 </li>
@@ -174,30 +191,23 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
           )}
 
           <div className="mt-5 flex items-stretch gap-2">
-            <div className="flex min-w-0 flex-1 items-center rounded-2xl border border-violet-200 bg-white px-4 py-3">
-              <p className="truncate font-mono text-sm text-violet-900">
-                {shareUrl}
-              </p>
+            <div className="flex min-w-0 flex-1 items-center rounded-xl border border-violet-200/50 bg-background px-4 py-3">
+              <p className="truncate font-mono text-sm">{shareUrl}</p>
             </div>
             <CopyLinkButton url={shareUrl} />
           </div>
 
-          <p className="mt-4 text-xs text-violet-700">
-            Cuando todos voten de nuevo, o si querés cerrar antes, finalizá la
-            encuesta abajo.
-          </p>
-
-          <div className="mt-4">
+          <div className="mt-5">
             <FinalizePollButton pollId={poll.id} />
           </div>
         </section>
       )}
 
       {poll.status === "votando" && (
-        <p className="mt-4 text-center">
+        <p className="mt-6 text-center">
           <Link
             href={getPollSharePath(poll.share_token)}
-            className="text-sm font-semibold text-accent hover:underline"
+            className="text-sm font-medium text-violet-600 transition-colors hover:text-violet-700"
           >
             Ver encuesta pública →
           </Link>
@@ -205,7 +215,7 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
       )}
 
       {results && (
-        <section className="mt-6">
+        <section className="mt-8">
           <PollResults pollTitle={poll.title} results={results} />
         </section>
       )}

@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PollStatusBadge } from "@/components/polls/poll-status-badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { PollLiveStats } from "@/lib/polls/results";
 import type { PollStatus } from "@/types";
 
@@ -13,11 +14,34 @@ type HostLiveViewProps = {
 
 const POLL_INTERVAL_MS = 5000;
 
+function HostLiveViewSkeleton() {
+  return (
+    <section className="mt-8">
+      <div className="flex items-center justify-between gap-3">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-6 w-20 rounded-full" />
+      </div>
+      <Skeleton className="mt-3 h-4 w-full max-w-sm" />
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <Skeleton className="h-20 rounded-xl" />
+        <Skeleton className="h-20 rounded-xl" />
+      </div>
+      <Skeleton className="mt-4 h-2 w-full rounded-full" />
+      <div className="mt-6 flex flex-col gap-2">
+        <Skeleton className="h-11 rounded-xl" />
+        <Skeleton className="h-11 rounded-xl" />
+        <Skeleton className="h-11 rounded-xl" />
+      </div>
+    </section>
+  );
+}
+
 export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
   const router = useRouter();
   const [stats, setStats] = useState<PollLiveStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const prevStatusRef = useRef<PollStatus>(initialStatus);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -50,27 +74,32 @@ export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
   }, [stats?.status, initialStatus, fetchStats]);
 
   useEffect(() => {
+    if (!stats) return;
+
+    const prev = prevStatusRef.current;
+    const next = stats.status;
+    if (prev === next) return;
+
+    prevStatusRef.current = next;
+
     if (
-      stats?.status === "votando" ||
-      stats?.status === "resultados" ||
-      stats?.status === "cerrado"
+      next === "votando" ||
+      next === "ballotage" ||
+      next === "resultados" ||
+      next === "cerrado"
     ) {
       router.refresh();
     }
-  }, [stats?.status, router]);
+  }, [stats, router]);
 
   if (loading && !stats) {
-    return (
-      <section className="mt-6 rounded-2xl border border-border bg-card p-6">
-        <p className="text-sm text-muted-foreground">Cargando…</p>
-      </section>
-    );
+    return <HostLiveViewSkeleton />;
   }
 
   if (!stats) {
     return (
-      <section className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-6">
-        <p className="text-sm text-rose-800">
+      <section className="mt-8 rounded-xl border border-red-200/80 bg-red-50/80 px-5 py-4">
+        <p className="text-sm text-red-700">
           {error ?? "No se pudieron cargar los datos."}
         </p>
       </section>
@@ -84,18 +113,23 @@ export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
       : 0;
 
   return (
-    <section className="mt-6 rounded-2xl border border-border bg-card p-6">
+    <section className="mt-8">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">
-          {isWaitingRoom ? "Sala de espera" : "Vista en vivo"}
-        </h2>
+        <div>
+          <p className="text-sm font-medium text-violet-600">
+            {isWaitingRoom ? "Sala de espera" : "En vivo"}
+          </p>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight">
+            {isWaitingRoom ? "Esperando participantes" : "Vista en vivo"}
+          </h2>
+        </div>
         <PollStatusBadge status={stats.status} />
       </div>
 
       {isWaitingRoom && (
-        <p className="mt-2 text-sm text-amber-800">
-          Compartí el link y esperá a que se unan todos. Cuando estén listos,
-          iniciá la votación.
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Compartí el link y esperá a que se unan. Cuando estén listos, iniciá
+          la votación.
         </p>
       )}
 
@@ -112,11 +146,11 @@ export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
       )}
 
       <div
-        className={`mt-4 grid gap-3 text-sm ${isWaitingRoom ? "grid-cols-1" : "grid-cols-2"}`}
+        className={`mt-5 grid gap-3 text-sm ${isWaitingRoom ? "grid-cols-1" : "grid-cols-2"}`}
       >
-        <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+        <div className="rounded-xl border border-border/60 bg-violet-500/[0.03] px-4 py-3">
           <p className="text-muted-foreground">Participantes</p>
-          <p className="mt-0.5 text-xl font-bold">
+          <p className="mt-0.5 text-xl font-semibold tracking-tight">
             {stats.participant_count}
             <span className="text-sm font-normal text-muted-foreground">
               {" "}
@@ -126,9 +160,9 @@ export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
         </div>
 
         {!isWaitingRoom && (
-          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+          <div className="rounded-xl border border-border/60 bg-violet-500/[0.03] px-4 py-3">
             <p className="text-muted-foreground">Ya votaron</p>
-            <p className="mt-0.5 text-xl font-bold">
+            <p className="mt-0.5 text-xl font-semibold tracking-tight">
               {stats.voted_count}
               <span className="text-sm font-normal text-muted-foreground">
                 {" "}
@@ -145,16 +179,16 @@ export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
             <span>Progreso de votación</span>
             <span>Round {stats.round}</span>
           </div>
-          <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-emerald-500 transition-all"
+              className="h-full rounded-full bg-violet-500 transition-all"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
       )}
 
-      <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <h3 className="mt-6 text-xs font-medium tracking-wide text-muted-foreground uppercase">
         {isWaitingRoom ? "Unidos" : "Participantes"}
       </h3>
       {stats.participants.length === 0 ? (
@@ -166,22 +200,20 @@ export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
           {stats.participants.map((participant) => (
             <li
               key={participant.id}
-              className="flex items-center justify-between rounded-xl border border-border px-4 py-2.5 text-sm"
+              className="flex items-center justify-between rounded-xl border border-border/60 px-4 py-2.5 text-sm"
             >
               <span className="font-medium">{participant.nickname}</span>
               <span
                 className={
-                  isWaitingRoom
-                    ? "text-xs font-semibold text-emerald-700"
-                    : participant.has_voted
-                      ? "text-xs font-semibold text-emerald-700"
-                      : "text-xs text-muted-foreground"
+                  isWaitingRoom || participant.has_voted
+                    ? "text-xs font-medium text-violet-600"
+                    : "text-xs text-muted-foreground"
                 }
               >
                 {isWaitingRoom
-                  ? "✓ Unido"
+                  ? "Unido"
                   : participant.has_voted
-                    ? "✓ Votó"
+                    ? "Votó"
                     : "Esperando"}
               </span>
             </li>
@@ -191,12 +223,12 @@ export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
 
       {!isWaitingRoom &&
         (stats.voted_count < stats.participant_count ? (
-          <p className="mt-6 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            El conteo de votos por opción se muestra cuando todos hayan votado.
+          <p className="mt-6 rounded-xl border border-border/60 bg-violet-500/[0.03] px-4 py-3 text-sm text-muted-foreground">
+            El conteo por opción se muestra cuando todos hayan votado.
           </p>
         ) : (
           <>
-            <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <h3 className="mt-6 text-xs font-medium tracking-wide text-muted-foreground uppercase">
               Conteo por opción
             </h3>
             <ul className="mt-2 flex flex-col gap-2">
@@ -210,7 +242,7 @@ export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
                 return (
                   <li
                     key={option.option_id}
-                    className="rounded-xl border border-border px-4 py-3 text-sm"
+                    className="rounded-xl border border-border/60 px-4 py-3 text-sm"
                   >
                     <div className="flex justify-between gap-2">
                       <span className="font-medium">{option.text}</span>
@@ -220,7 +252,7 @@ export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
                     </div>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
                       <div
-                        className="h-full rounded-full bg-accent"
+                        className="h-full rounded-full bg-violet-500"
                         style={{ width: `${barWidth}%` }}
                       />
                     </div>
@@ -234,7 +266,7 @@ export function HostLiveView({ pollId, initialStatus }: HostLiveViewProps) {
       {error && <p className="mt-4 text-xs text-amber-700">{error}</p>}
 
       <p className="mt-4 text-xs text-muted-foreground">
-        Se actualiza automáticamente cada {POLL_INTERVAL_MS / 1000} segundos.
+        Se actualiza cada {POLL_INTERVAL_MS / 1000} segundos.
       </p>
     </section>
   );

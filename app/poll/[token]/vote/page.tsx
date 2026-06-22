@@ -7,6 +7,7 @@ import {
   getPollByShareToken,
   getPollOptionsByShareToken,
 } from "@/lib/polls/public-queries";
+import { enrichPollOptionsWithImages } from "@/lib/images/enrich-options";
 type VotePageProps = {
   params: Promise<{ token: string }>;
 };
@@ -30,7 +31,8 @@ export default async function VotePage({ params }: VotePageProps) {
     redirect(`/poll/${token}`);
   }
 
-  const options = await getPollOptionsByShareToken(token);
+  const rawOptions = await getPollOptionsByShareToken(token);
+  const options = await enrichPollOptionsWithImages(rawOptions);
 
   const isBallotage = poll.status === "ballotage";
 
